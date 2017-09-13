@@ -1,0 +1,7 @@
+1. https://www.rdocumentation.org/packages/sets/versions/1.0-16/topics/fuzzyinference
+
+2. https://cran.r-project.org/web/packages/sets/sets.pdf
+
+3.http://juandes.github.io/FuzzyLogic-R/docs/fuzzy_tutorial
+
+4. http://www.academia.edu/20267396/Fuzzy_Logic_in_R
