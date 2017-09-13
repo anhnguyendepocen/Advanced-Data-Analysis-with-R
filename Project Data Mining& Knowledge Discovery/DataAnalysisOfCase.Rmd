@@ -1,0 +1,334 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+  pdf_document: default
+  html_document: default
+---
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+---
+
+```{r}
+##*****************Importing Dataset*******************
+
+setwd("I:/HSE/HSE/Big Data Systems/Knowlegde discover/homework_case")
+
+TaxData = read.csv("data.csv")
+
+```
+
+```{r}
+#*****************Data Cleaning and Data Preprocessing **********************
+dim(TaxData)  
+```
+
+```{r}
+colnames(TaxData) 
+```
+
+```{r}
+head(TaxData)
+```
+```{r}
+#removing typos from sector column
+TaxData$sector = as.character(TaxData$sector)
+TaxData$sector[TaxData$sector=="transort"]<-"transport"
+TaxData$sector[TaxData$sector=="transp."]<-"transport"
+TaxData$sector[TaxData$sector=="Agriculture sector"]<-"agriculture"
+TaxData$sector[TaxData$sector=="Retail sector"]<-"retail"
+TaxData$sector[TaxData$sector=="Retail."]<-"retail"
+unique(TaxData$sector)
+```
+
+```{r}
+TaxData$sector = as.numeric(as.factor(TaxData$sector))
+unique(TaxData$sector)
+```
+
+```{r}
+# Removing NAs from dataframe
+TaxData[is.na(TaxData)] <- 0
+
+```
+
+```{r}
+#removing negative values
+TaxData[TaxData<0]<-0
+```
+
+```{r}
+#znormalization of Unianking
+zScoreNorm = TaxData
+m <- apply(zScoreNorm,2,mean)
+s <- apply(zScoreNorm,2,sd)
+zNorm_Data<- scale(zScoreNorm,m,s)
+write.csv(zNorm_Data, file = "z_NormData.csv")
+class(zNorm_Data)
+```
+
+```{r}
+#Histogram after z score normalization of data
+hist(zNorm_Data, col= "green")
+
+#write.csv(Norm_ranking, file = "znormranking.csv")
+```
+
+```{r}
+#QQ plot after z score normalization of data
+qqnorm(zNorm_Data)
+qqline(zNorm_Data)
+```
+
+```{r}
+ plot(zNorm_Data)
+```
+```{r}
+# boxplot of z normalized data
+boxplot(zNorm_Data, col= "green")
+```
+
+```{r}
+#minmax normalization
+normalized = (TaxData-min(TaxData))/(max(TaxData)-min(TaxData))
+normalized=format(round(normalized, 3), nsmall = 3)
+
+write.csv(normalized, file = "mm_NormData.csv")
+
+class(normalized)
+```
+
+
+
+```{r}
+#*****************Exploring the Data**********************
+library(moments)
+s <- skewness(zNorm_Data)
+```
+
+```{r}
+#plot of skewness
+plot(s, col= "green")
+```
+
+```{r}
+
+k <- kurtosis(zNorm_Data)
+```
+
+```{r}
+#plot of kurtosis
+plot(k, col= "green")
+```
+
+```{r}
+hist(s, col = 'green')
+
+```
+
+```{r}
+hist(k, col = 'green')
+```
+```{r}
+#summary statistics of data
+library(Hmisc)
+ describe(zNorm_Data)
+```
+```{r}
+#corelation of varialbes 
+M1 <- cor(zNorm_Data[,1:15],zNorm_Data[,16:30])
+M2 <- cor(zNorm_Data[,16:30],zNorm_Data[,31:44])
+M3 <- cor(zNorm_Data[,31:44],zNorm_Data[,1:15])
+```
+
+```{r}
+# plot of 1-15 variables with 16-30 variables
+library(corrplot)
+#M <- cor(mtcars)
+corrplot(M1, method="circle", type = "lower")
+
+```
+
+```{r}
+# plot of 16-30 variables with 31-44 variables
+library(corrplot)
+#M <- cor(mtcars)
+corrplot(M2, method="circle", type = "lower")
+
+```
+
+```{r}
+# plot of first 31-44 variables
+library(corrplot)
+#M <- cor(mtcars)
+corrplot(M3, method="circle", type = "lower")
+
+```
+
+```{r}
+#corelation of varialbes 
+M4 <- cor(zNorm_Data[,1:15])
+M5 <- cor(zNorm_Data[,16:30])
+M6 <- cor(zNorm_Data[,31:44])
+```
+
+```{r}
+corrplot(M4, method="circle", type = "lower")
+```
+
+```{r}
+corrplot(M5, method="circle", type = "lower")
+```
+
+```{r}
+corrplot(M6, method="circle", type = "lower")
+```
+
+```{r}
+#covariance of variables 
+cv1 <- cov(zNorm_Data[,1:15])
+cv2 <- cov(zNorm_Data[,16:30])
+cv3 <- cov(zNorm_Data[,31:44])
+```
+
+```{r}
+# plot of covairnacce 1:15
+corrplot(cv1, order ="alphabet", type = "upper")
+
+```
+
+```{r}
+#plot covaiance 16:30
+corrplot(cv2, order ="alphabet", type = "upper")
+
+```
+
+```{r}
+#31:44
+corrplot(cv3, order ="alphabet", type = "upper")
+
+```
+```{r}
+#**********************Clusterization*********************
+library(cluster)
+library(fpc)
+# kmeans clusteringz
+   zNorm_Data[is.nan(zNorm_Data)]<-1
+   cl = kmeans(zNorm_Data,3)
+```
+
+```{r}
+ plotcluster(zNorm_Data, cl$cluster)
+```
+
+```{r}
+clusplot(zNorm_Data, cl$cluster, color=TRUE, shade=TRUE, labels = 2, lines=0)
+```
+```{r}
+# Hierarchical clustering
+library(dendextend)
+distance= dist(zNorm_Data)
+hc.c <- hclust(distance)
+hc.a <- hclust(distance, method = "average")
+```
+
+```{r}
+#complete link dendrogram
+dend <- as.dendrogram(hc.c)
+dend <- color_branches(dend, k=3)
+plot(dend)
+```
+
+```{r}
+#average link dendrogram
+dend <- as.dendrogram(hc.a)
+dend <- color_branches(dend, k=3)
+plot(dend)
+```
+
+```{r}
+#******************Find tax evaders********************
+#three-sigma rule and interquartile ranges
+   cParmBox  <- 1.5                                           
+   daQUAR    <- quantile(zNorm_Data, c(.25, .75))                    
+   cutOffBox <- daQUAR+cParmBox*c(-1,1)*(daQUAR[2]-daQUAR[1])
+     
+```
+
+
+```{r}
+
+plot(1:length(zNorm_Data),zNorm_Data , ylim=c(-1,1)*max(abs(c(zNorm_Data,cutOffBox ))),pch='.', col= "red")
+
+```
+
+
+```{r}
+   
+cParmSig  <- 3                                               
+   daMean    <- mean(zNorm_Data)                                     
+   daSD      <- sd(zNorm_Data)                                       
+   cutOffSig <- cParmSig*c(-1, 1)*daSD+daMean                    
+   
+```
+
+```{r}
+plot(1:length(zNorm_Data),zNorm_Data , ylim=c(-1,1)*max(abs(c(zNorm_Data,cutOffSig))),pch='.', col= "green"   )
+```
+
+
+```{r}
+library(DMwR)
+outlier.scores <- lofactor(zNorm_Data, k=100)
+plot(density(outlier.scores))
+
+```
+
+```{r} 
+#pick top 20 as outliers
+outliers <- order(outlier.scores, decreasing=T)[1:100]
+#who are outliers
+print(outliers)
+```
+```{r}
+hist(outliers, col = "green")
+```
+
+```{r}
+library(Rlof)
+outlier.scores1 <- lof(zNorm_Data, k=100)
+# try with different number of neighbors (k = 5,6,7,8,9 and 10)
+#outlier.scores <- lof(zNorm_Data, k=20)
+plot(density(outlier.scores1))
+
+```
+
+```{r}
+#pick top 20 as outliers
+outliers2 <- order(outlier.scores1, decreasing=T)[1:100]
+print(outliers2)
+```
+
+```{r}
+hist(outliers2, col = "green")
+```
+```{r}
+outlier.scores3 <- lofactor(TaxData, k=100)
+plot(density(outlier.scores3))
+```
+
+
+```{r}
+#pick top 20 as outliers
+outliers4 <- order(outlier.scores3, decreasing=T)[1:100]
+#who are outliers
+print(outliers4)
+```
+```{r}
+hist(outliers4, col = "green")
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
